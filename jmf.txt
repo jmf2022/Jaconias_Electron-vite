@@ -1,0 +1,118 @@
+INICIANDO PROJETO COM A BIBLIOTECA REACHT
+
+ELECTRON-VITE  BIBLIOTECA QUE FAZ UNIÃO COM ELETRON COM REACHT
+
+Aula 9  excluir arquivos desnecessarios, criar novo html reacht da janela inicial e configurar o tamanho da janela no arquivo main.js 
+do modo que exibe a atualização automatica  na configuração package,json "dev": "electron-vite dev --watch"
+
+
+Aula 10  Obter as fontes do google identificar as pas front-end e  Back-end   preload é o Front-End , 
+Render é intermediario e o Mian .
+
+Aula 11 Configurar TailWindcss intalando bibliotecas Vite: npm create vite@latest my-project -- --template react
+criar pasta style e criar arquivo css
+
+Aula 12 Excluir 2 arquivos desnecessarios e colar os codigos do arquivo no dowload 
+tsconfig.json
+
+Aula 13 instalar biblioteca no cmd: npm install vite-plugin-static-copy
+importar a biblioteca no arquivo electron-vite.config.js  trocar icone da janela
+2:35 colocar o caminho da pasta sources no array da parte do main.Rodar projeto e
+ sera gerado a pasta OUT que contem o icone o o arquivo javascript, e esse processo 
+ e gerado pelo plugin que foi instalado, e tudo isso dentro da main.
+
+ Aula 14 Criar as paginas ou arqivos das paginas home, create, aboult e detail
+ instalar a biblioteca router Dom, para crira as rotas: npm i electron-router-dom@1.0.5
+ e em siguida  também a biblioteca react router dom: npm install reacht-router-dom
+ criar arquivo routes aos 4:15 nesse arquivo sera importado as paginas criadas
+ depois entrar no arquivo app.tsx que é o primeiro a ser renderizado e criar o codigos
+ imports que chama as funçoes
+
+ Aula 15  Criar pasta layout dentro da pasta components e o arquivo index.tsx 
+   dentro da pasta layout 2:35 , configuração do layout com Outlet , outlet é um trecho
+   que vai rederizar as paginas, em seguinda trazer no arquivo Routes.tsx com Route
+   na linha 12passando o elemento e importando o layout , logo apos chamar na
+   linha 13 como um componente react observando que esse layout esta dentro de todas
+   as rotas das nossas aplicações 3:21. Na pagina de home criar um link de pagina
+   4:8 logo apos instalar o radix: npm install @radix-ui/react-collapsible
+   dentro da pasta components cria pasta header e dentro de header index.tsx
+    importar a biblioteca radix collapsible e logo apos na linha criar o nosso 
+    collapsible envolvendo todos observando a necessidade do icone ou toglle da side-bar
+    enseguida ja instala uma biblioteca de icones 6:57 npm install phosphor-react , e tambem
+    CLSX clica no enter.
+
+
+    Aula 16 Criar uma div no header, importar as duas bibliotecas de icones colocar o icone
+    na linha 8 substituir o root do collapsible por trigger ou seja collapsible.trigger
+     criar classname continuando a criação da sidebar .Inicar o conteudo do header 3:15
+     colocar a cor do background-color de fundo aos 3:50  no arquino index.ts dentro da pasta 
+     main no primeiro SRC ,colocar o collapsible no layout 8:50 trazer a side-bar na linha 10
+     no arquivo index.tsx na pasta layout .
+
+
+     Aula 17 abrir o arquivo index.tsx dentro da pasta side-bar e iniciar a implementação da 
+     side-bar importando a biblioteca radix collapsible e tambem a biblioteca de icones 
+     com um icone , e tambem a biblioteca CLSX. Dentro do collapsible.content que tera o conteudo
+     da nossa side-bar que esta na linha 9. acessar o arquivo layout aos 5:05,6:20 esconder um
+     dos dois botoes que estam aparesendo. Aos 10:00 criação da div que contem os conteudos da side-Bar 10:50 a session doslinks na pasta components 
+     criar uma pasta Link e dentro da pasta link um arquivo index.tsx .Chamar o primeiro link
+      dentro da sidebar aos 11:43 finalizando os links de pagina na final do video-aula.
+
+      Aula 18 Inicialmente continuou a explicação dos links de paginas ,aos 1:00 comensando a 
+      personalizar a side-Bar com componente entre chave no import ou seja {navelink}
+      em seguida na linha 13 navlink transporta uma função continuando ate 5:00
+      comesar a criar a animação da sideBar que abre e fecha aos 4:14, e aos 6:00 abrir o
+      arquivo sidebar.tsx e na linha 11 continuar testar aos 9:40.
+
+      
+      Aula 19. Aos 1:00 criação do codigo para plugins no arquivo tailwind.config.css
+      e aos 2:50 passando para o arquivo sidebar.tsx na linha 27 criar div e criar os
+      codigos da stilação ou sejas as propriedades, ou seja os codigo da questão se for
+       no MAC e não no Windows ,e aos 3:57 abrir a pasta header e o arquivo index.tsx 
+       e continuar o codigo de estilação na linha 17 
+
+
+       Aula 20  Relembrando os conhecimentos do modulo (evoluindo o projeto).
+
+
+       Aula 21 Criando o Tray da barra de ferramenta ou seja o icone no menu da barra de
+       ferramenta direita com opção sair ou fechar com dropdown, e aos 1:50 passar para o 
+       arquivo index.ts demtro da pasta main que esta no primeiro SRC, e aos 3:55 identificar
+       o diretorio do icone codificado no arquivo Tray.ts que é na pasta out.
+       E na linha 5 do aqruivo Tray.ts o codigo do diretorio, e na linha 8 o codigo do Tray 
+       e aos 10:20 explica os tipos de menu dropdown ate na linha 32 .
+
+       Aula 22 Continuando o Tray, retirando o console log aos 1:30  e aos 2:20 excluir o 
+       arquivo index.d.ts que esta na pasta preload.
+
+
+
+       Aula 23 aos 0:55 abrir o arquivo pagina home criar uma função, 1:20 criar o arquivo 
+       ipc.ts na pasta main esse arquivo que faz os processos, o invok pode enviar como receber
+
+
+       Aula 24 No cmd 3:00 instalar o banco de dados Pouchdb e o Pouchdb-Browser e em seguida
+       instalar as tipagen do banco de dados npm install @types/pouchdb @types/pouchdb-browser
+       comesando a configuração do banco de dados aos 3:50 . Acessar a pasta mais do primeiro SRC
+       e criar um arquivo Store.ts fazer o import do electro app 4:50 criar uma pasta Shared dentro
+       da pasta main  uma apasta tapy e dentro da pasta tapy um arquivo ipc.ts, e nesse arquivo
+       vai ser as tipagem do banco de dados 7:50 inicindo a configuração ou o caminho do banco de dados.
+
+       Aula_25 
+
+
+
+   
+
+
+
+
+
+
+
+
+
+
+ 
+
+
