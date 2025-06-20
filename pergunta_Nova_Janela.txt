@@ -1,0 +1,345 @@
+1- Componentes side bar.
+
+import * as Collapsible from '@radix-ui/react-collapsible'
+import { ArrowBendDoubleUpLeft } from 'phosphor-react'
+import clsx from 'clsx'
+import { LinkContent } from '../link'
+
+export function Sidebar(){
+  const isMacOS = process.platform === "darwin"
+
+  return(
+    <Collapsible.Content
+      className='bg-gray-950 flex-shrink-0 border-r border-slate-600 h-screen relative group overflow-hidden data-[state=open]:animate-slideIn data-[state=closed]:animate-slideOut'
+    >
+      <Collapsible.Trigger 
+      className={
+        clsx(
+          'absolute h-7 w-7 right-4 z-[99] text-white hover:scale-105 duration-200 inline-flex items-cecnter justify-center',
+          {
+            'top-[1.125rem]': isMacOS,
+            'top-6': !isMacOS
+          }
+        )
+      }
+      >
+        <ArrowBendDoubleUpLeft className='h-7 w-7'/>
+      </Collapsible.Trigger>
+
+      <div
+        className={clsx('regrion-drag h-14 z-0 mt-10', {
+          block: isMacOS,
+          hidden: !isMacOS
+        })}
+      >
+      </div>
+
+      <div 
+        className={clsx(
+          'flex-1 flex flex-col h-full gap-8 w-[220px] transition-opacity group-data-[state=open]:opacity-100 group-data-[state=closed]:opacity-0 duration-200',
+          {
+            'pt-6': !isMacOS
+          }
+        )}
+      >
+        <nav className="flex mx-2 flex-col gap-8 text-slate-100">
+          <div className='flex flex-col gap-2'>
+            <div className='text-white font-semibold uppercase mb-2 ml-2'>
+              MENU
+            </div>  
+          </div>
+
+          <section className='flex flex-col gap-px'>
+            <LinkContent to="/">Clientes</LinkContent>
+
+            <LinkContent to="/create">Cadastrar cliente</LinkContent>
+
+            <LinkContent to="/about">Sobre</LinkContent>
+
+            <LinkContent to="/about">Nova janela visualizar</LinkContent>
+          </section>
+
+        </nav>
+      </div>
+    </Collapsible.Content>
+  )
+}
+
+
+
+
+2- preload index.ts
+
+import { contextBridge, ipcRenderer } from 'electron'
+import { ElectronAPI, electronAPI } from '@electron-toolkit/preload'
+import { Customer, NewCustomer } from '../shared/types/ipc'
+
+declare global {
+  export interface Window{
+    electron: ElectronAPI
+    api: typeof api
+  }
+}
+
+// Custom APIs for renderer
+const api = {
+  onNewCustomer: (callback: () => void) => {
+    ipcRenderer.on("new-customer", callback)
+
+    return () => {
+      ipcRenderer.off("new-customer", callback)
+    }
+  },
+  fetchUsers: () => {
+    // INVOKE -> enviar e receber
+    return ipcRenderer.invoke("fetch-users")
+  },
+  addCustomer: (doc: NewCustomer): Promise<void | PouchDB.Core.Response> => ipcRenderer.invoke("add-customer", doc),
+  fetchAllCustomers: (): Promise<Customer[]> => ipcRenderer.invoke("fetch-all-customers"),
+  fetchCustomerById: (docId: string): Promise<Customer> => ipcRenderer.invoke("fetch-customer-id", docId),
+  deleteCustomer: (docId: string) => ipcRenderer.invoke("delete-customer", docId),
+  getVersionApp: () => ipcRenderer.invoke("get-version")
+
+
+}
+
+// Use `contextBridge` APIs to expose Electron APIs to
+// renderer only if context isolation is enabled, otherwise
+// just add to the DOM global.
+if (process.contextIsolated) {
+  try {
+    contextBridge.exposeInMainWorld('electron', electronAPI)
+    contextBridge.exposeInMainWorld('api', api)
+  } catch (error) {
+    console.error(error)
+  }
+} else {
+  // @ts-ignore (define in dts)
+  window.electron = electronAPI
+  // @ts-ignore (define in dts)
+  window.api = api
+}
+
+
+
+3- main
+import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import path, { join } from 'node:path'
+import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { createFileRoute, createURLRoute } from 'electron-router-dom'
+import { createTray } from './tray'
+
+import './ipc'
+import './store'
+
+function createWindow(): void {
+  // Create the browser window.
+  const mainWindow = new BrowserWindow({
+    width: 900,
+    height: 670,
+    show: true,
+    autoHideMenuBar: true,
+    backgroundColor: "#030712",
+    ...(process.platform === 'linux' ? { 
+      icon: path.join(__dirname, "../../build/icon.png")
+     } : process.platform === "win32" && {
+      icon: path.join(__dirname, "resources", "icon.png")
+     }),
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false
+    }
+  })
+
+  // Chamar para exibir o tray
+  createTray(mainWindow)
+  
+  // Mudar icone para o mac 
+  if(process.platform === "darwin"){
+    const iconPath = path.resolve(__dirname, "resources", "icon.png")
+    app.dock.setIcon(iconPath);
+  }
+
+  mainWindow.on('ready-to-show', () => {
+    mainWindow.show()
+    mainWindow.webContents.openDevTools();
+  })
+
+  mainWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url)
+    return { action: 'deny' }
+  })
+
+
+  const devServerURL = createURLRoute(process.env['ELECTRON_RENDERER_URL']!, 'main')
+
+  const fileRoute = createFileRoute(
+    join(__dirname, '../renderer/index.html'),
+    'main'
+  )
+
+  // HMR for renderer base on electron-vite cli.
+  // Load the remote URL for development or the local html file for production.
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    mainWindow.loadURL(devServerURL)
+  } else {
+    mainWindow.loadFile(...fileRoute)
+  }
+}
+
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
+app.whenReady().then(() => {
+  // Set app user model id for windows
+  electronApp.setAppUserModelId('com.electron')
+
+  // Default open or close DevTools by F12 in development
+  // and ignore CommandOrControl + R in production.
+  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
+  app.on('browser-window-created', (_, window) => {
+    optimizer.watchWindowShortcuts(window)
+  })
+
+  // IPC test
+  ipcMain.on('ping', () => console.log('pong'))
+
+  createWindow()
+
+  app.on('activate', function () {
+    // On macOS it's common to re-create a window in the app when the
+    // dock icon is clicked and there are no other windows open.
+    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  })
+})
+
+// Quit when all windows are closed, except on macOS. There, it's common
+// for applications and their menu bar to stay active until the user quits
+// explicitly with Cmd + Q. npm run start
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
+})
+
+
+
+
+4-Pagina detalhes.
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { ArrowLeft, Trash } from 'phosphor-react';
+import { useParams } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+
+export function Detail(){
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
+  const queryClient = useQueryClient();
+
+  //Buscar os clientes
+  const { data, isFetching } = useQuery({ queryKey: ["customer"], queryFn: async () => {
+    const response = await window.api.fetchCustomerById(id!)
+    console.log(response)
+    return response;
+  } })
+
+  const { isPending, mutateAsync: handleDeleteCustomer } = useMutation({ mutationFn: async (id: string) => {
+    try{
+      await window.api.deleteCustomer(id)
+      console.log("CLIENTE DELETADO COM SUCESSO!")
+    }catch(err){
+      console.log(err)
+    }
+  }, onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["customers"]})
+    navigate("/")
+  }}) 
+
+  return (
+    <main className='flex-1 flex flex-col py-12 px-10 text-white'>
+      <Link to="/" className='flex items-center gap-2 mb-2'>
+        <ArrowLeft className='w-6 h-6 text-white'/>
+        <span>Voltar</span>
+      </Link>
+      <h1 className='text-white text-xl lg:text-3xl font-semibold mb-4'>
+        Detalhes do cliente
+      </h1>
+
+      <section className='flex flex-col gap-6 w-full'>
+        {!isFetching && data && (
+          <article className='w-full relative flex flex-col gap-1'>
+            <section className='bg-gray-800 rounded px-4 py-3'> 
+              <p className='mb-2 font-semibold text-lg'>{data.name}</p>
+
+              <p>
+                <span className='font-semibold'>Email: </span>{data.email}
+              </p>
+
+              {data.address && (
+                <p>
+                  <span className='font-semibold'>Endereço: </span>{data.address}
+                </p>
+              )}
+
+              {data.phone && (
+                <p>
+                  <span className='font-semibold'>Telefone: </span>{data.phone}
+                </p>
+              )}  
+
+              <div className='absolute -top-3 right-2'>
+                <button 
+                className='bg-red-500 hover:bg-red-600 p-2 rounded-full z-20'
+                onClick={() => handleDeleteCustomer(data._id)}
+                disabled={isPending}
+                >
+                  <Trash className='text-white h-6 w-6'/>
+                </button> 
+              </div>
+
+            </section>
+
+            <section className='bg-gray-800 rounded px-4 py-3'>
+              <p>
+                <span className='font-semibold'>Cargo: </span>{data.role}
+              </p>
+              <p>
+                <span className='font-semibold'>Status atual: </span>{data.status ? "ATIVO" : "INATIVO"}
+              </p>
+            </section>
+          </article>
+        )}
+      </section>
+
+
+    </main>
+  )
+}
+
+
+
+5-Routes.tsx 
+
+import { Router, Route } from 'electron-router-dom'
+
+import { Home } from './pages/home'
+import { Detail } from './pages/detail'
+import { About } from './pages/about'
+import { Create } from './pages/create'
+import { Layout } from './components/layout'
+
+export function Routes(){
+  return(
+    <Router
+      main={
+        <Route path='/' element={ <Layout/> } >
+          <Route path='/' element={<Home/>} />
+          <Route path='/create' element={<Create/>} />
+          <Route path='/about' element={<About/>} />
+          <Route path='/customer/:id' element={<Detail/>} />
+        </Route>
+      }
+    />
+  )
+}
